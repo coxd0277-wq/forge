@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0accca15-c742-41ff-aa4d-0446580e77f7",
+    "text": "Give a one-sentence system greeting.",
+    "kind": "conversation",
+    "at": "2026-08-26T21:10:14.924Z"
+  },
+  {
+    "id": "f94d47e4-3fed-40db-a1fc-6f68d5298041",
+    "text": "Open Blender and help design a chair",
+    "kind": "conversation",
+    "at": "2026-08-26T21:10:09.084Z"
+  }
+]

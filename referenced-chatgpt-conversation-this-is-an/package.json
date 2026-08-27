@@ -1,0 +1,13 @@
+{
+  "name": "forge-assistant",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --env-file=.env.local server.js",
+    "start": "node --env-file=.env.local server.js"
+  },
+  "dependencies": {
+    "@openai/agents": "^0.4.0"
+  }
+}

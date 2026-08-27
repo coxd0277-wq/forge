@@ -1,6 +1,6 @@
 export class ForgeOrchestrator {
-  constructor({ bus, memory, permissions, registry }) {
-    Object.assign(this, { bus, memory, permissions, registry });
+  constructor({ bus, memory, permissions, registry, blender, lessons }) {
+    Object.assign(this, { bus, memory, permissions, registry, blender, lessons });
     this.mode = process.env.OPENAI_API_KEY ? "agent-ready" : "demo";
     this.runtime = {
       projector: false,
@@ -20,6 +20,8 @@ export class ForgeOrchestrator {
       runtime: this.runtime,
       modules: this.registry.list(),
       hive: this.registry.hive(),
+      blender: this.blender.status(),
+      lessons: this.lessons.recent(),
       permissions: this.permissions.list(),
       memory: this.memory.recent(),
       events: this.bus.history()
@@ -44,10 +46,11 @@ export class ForgeOrchestrator {
       enabledModules: modules.filter((module) => module.enabled).length,
       pendingApprovals: this.permissions.list().filter((item) => item.status === "pending").length,
       memoryEntries: this.memory.items.length,
+      lessonEntries: this.lessons.recent().length,
       agent: this.mode,
       projector: this.runtime.projector ? "presentation-ready" : "standby",
       clapWake: this.runtime.clapWake ? "armed" : "disabled",
-      blender: this.runtime.blenderConnected ? "bridge-ready" : "not-linked",
+      blender: this.blender.status().connected ? "bridge-ready" : "not-linked",
       hiveAgents: this.registry.hive().totalAgents
     };
   }
@@ -60,21 +63,6 @@ export class ForgeOrchestrator {
     if (/code|build|debug|fix|refactor|script/.test(lower)) return "coding";
     if (/plan|schedule|todo|organize|remember/.test(lower)) return "everyday";
     return "orchestration";
-  }
-
-  buildLesson(topic) {
-    const cleaned = topic.replace(/^.*?(learn|teach me|tutorial on|lesson on)\s*/i, "").trim() || topic.trim();
-    return {
-      topic: cleaned,
-      title: `Mini tutorial: ${cleaned}`,
-      steps: [
-        `Overview: what ${cleaned} is and why it matters.`,
-        `Core ideas: the 3 to 5 most important concepts in ${cleaned}.`,
-        `Simple walkthrough: one beginner-friendly example.`,
-        `Practice challenge: a small task to test understanding.`,
-        `Reflection: common mistakes and what to study next.`
-      ]
-    };
   }
 
   async respond(message) {
@@ -103,24 +91,25 @@ export class ForgeOrchestrator {
     }
 
     if (route === "blender") {
+      const design = this.blender.planDesign(message);
       const permission = this.permissions.request("blender.control", `Forge wants to prepare a Blender-assisted design workflow for: “${message}”`);
       return {
-        text: this.runtime.blenderConnected
-          ? "Blender Forge is ready to help design this. I can break the model into steps, prepare a scene plan, generate Blender scripting ideas, and teach the workflow as we go."
-          : "I can add a Blender bridge for this so Forge can guide modeling, propose scene structure, and prepare automation-ready Blender steps after approval.",
+        text: `${this.blender.status().connected ? "Blender Forge is linked." : "Blender Forge is not linked yet."} Design plan ready for ${design.prompt}.\n1. ${design.phases[0]}\n2. ${design.phases[1]}\n3. ${design.phases[2]}\nTutorial note: ${design.tutorial[1]}`,
         permission,
+        design,
         mode: this.mode,
         route,
-        suggestions: ["Enable Blender Bridge", "Open Blender Bay", "Generate Chair Modeling Plan"]
+        suggestions: ["Connect Blender", "Generate Blender script", "Teach this workflow"]
       };
     }
 
     if (route === "tutor") {
-      const lesson = this.buildLesson(message);
-      this.runtime.lessonHistory.unshift({ topic: lesson.topic, at: new Date().toISOString() });
+      const lesson = this.lessons.createLesson(message.replace(/^teach me\s*/i, "").replace(/^explain\s*/i, "").trim() || message.trim());
+      await this.lessons.save();
+      this.runtime.lessonHistory.unshift({ topic: lesson.topic, at: lesson.createdAt });
       this.runtime.lessonHistory = this.runtime.lessonHistory.slice(0, 12);
       return {
-        text: `${lesson.title}\n1. ${lesson.steps[0]}\n2. ${lesson.steps[1]}\n3. ${lesson.steps[2]}\n4. ${lesson.steps[3]}\n5. ${lesson.steps[4]}`,
+        text: `${lesson.title}\nOverview: ${lesson.overview}\nConcepts: ${lesson.concepts.join(" | ")}\nPractice: ${lesson.steps[2]}\nQuiz: ${lesson.quiz[0]}`,
         lesson,
         mode: this.mode,
         route,
@@ -130,7 +119,7 @@ export class ForgeOrchestrator {
 
     if (route === "research") {
       return {
-        text: "Research Swarm can investigate this topic, compare sources, extract key points, and turn the findings into a plain-language summary or study brief.",
+        text: "Research Swarm can investigate this topic, compare sources, pull key ideas, and turn the results into a mini tutorial or practical brief.",
         mode: this.mode,
         route,
         suggestions: ["Run research brief", "Compare sources", "Turn findings into lesson"]

@@ -2,7 +2,9 @@ const state = {
   currentView: "core",
   pendingPermission: null,
   speech: null,
-  clapWake: { armed: true, lastPeakAt: 0, peaks: [] }
+  clapWake: { armed: true, lastPeakAt: 0, peaks: [] },
+  latestDesign: null,
+  latestLesson: null
 };
 
 const byId = (id) => document.getElementById(id);
@@ -88,9 +90,9 @@ const applyState = (payload) => {
   clapStatus.textContent = payload.runtime.clapWake ? "ARMED" : "DISABLED";
   clapMeter.style.width = `${payload.runtime.clapWake ? 72 : 10}%`;
   autoStartStatus.textContent = payload.runtime.autoStart ? "Enabled" : "Disabled";
-  blenderStatus.textContent = payload.runtime.blenderConnected ? "Linked" : "Standby";
-  lessonCount.textContent = `${payload.runtime.lessonHistory.length} queued`;
-  lessonMeter.style.width = `${Math.min(100, 4 + payload.runtime.lessonHistory.length * 9)}%`;
+  blenderStatus.textContent = payload.blender.connected ? "Linked" : "Standby";
+  lessonCount.textContent = `${payload.lessons.length} saved`;
+  lessonMeter.style.width = `${Math.min(100, 4 + payload.lessons.length * 9)}%`;
 
   renderModules(payload.modules);
   renderHive(payload.hive);
@@ -102,6 +104,24 @@ const refresh = async () => {
   applyState(await res.json());
 };
 
+const renderDesignToTranscript = (design) => {
+  if (!design) return;
+  state.latestDesign = design;
+  setTranscript(
+    `${design.prompt}\n1. ${design.phases[0]}\n2. ${design.phases[1]}\n3. ${design.phases[2]}\nTutorial: ${design.tutorial[0]}`,
+    "FORGE // BLENDER"
+  );
+};
+
+const renderLessonToTranscript = (lesson) => {
+  if (!lesson) return;
+  state.latestLesson = lesson;
+  setTranscript(
+    `${lesson.title}\nOverview: ${lesson.overview}\nConcepts: ${lesson.concepts.join(" | ")}\nPractice: ${lesson.steps[2]}\nQuiz: ${lesson.quiz[0]}`,
+    "FORGE // TUTOR"
+  );
+};
+
 const sendCommand = async (message) => {
   setTranscript("Forging response...", "SYSTEM");
   const res = await fetch("/api/chat", {
@@ -111,6 +131,8 @@ const sendCommand = async (message) => {
   });
   const data = await res.json();
   setTranscript(data.text, data.route ? `FORGE // ${data.route.toUpperCase()}` : "FORGE");
+  if (data.design) renderDesignToTranscript(data.design);
+  if (data.lesson) renderLessonToTranscript(data.lesson);
   if (data.permission?.id) {
     state.pendingPermission = data.permission.id;
     approvalText.textContent = data.permission.reason;
@@ -118,6 +140,12 @@ const sendCommand = async (message) => {
   }
   await refresh();
 };
+
+const postJson = (url, body) => fetch(url, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(body)
+}).then((res) => res.json());
 
 byId("commandForm").addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -132,31 +160,19 @@ byId("moduleGrid").addEventListener("click", async (event) => {
   if (!button) return;
   const id = button.getAttribute("data-module");
   const enabled = button.textContent !== "Disable";
-  await fetch("/api/module", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id, enabled })
-  });
+  await postJson("/api/module", { id, enabled });
   await refresh();
 });
 
 byId("projectorToggle").addEventListener("click", async () => {
-  await fetch("/api/runtime", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ projector: true, scene: "projector" })
-  });
+  await postJson("/api/runtime", { projector: true, scene: "projector" });
   setTranscript("Projector scene armed. Visual focus mode is ready.", "FORGE // PROJECTOR");
   await refresh();
 });
 
 approval.querySelector("#allow").addEventListener("click", async () => {
   if (!state.pendingPermission) return approval.close();
-  await fetch("/api/permission", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id: state.pendingPermission, approved: true })
-  });
+  await postJson("/api/permission", { id: state.pendingPermission, approved: true });
   state.pendingPermission = null;
   approval.close();
   setTranscript("Approval recorded. The prepared capability is now unlocked for the next step.", "SYSTEM");
@@ -165,11 +181,7 @@ approval.querySelector("#allow").addEventListener("click", async () => {
 
 approval.querySelector("#deny").addEventListener("click", async () => {
   if (state.pendingPermission) {
-    await fetch("/api/permission", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: state.pendingPermission, approved: false })
-    });
+    await postJson("/api/permission", { id: state.pendingPermission, approved: false });
   }
   state.pendingPermission = null;
   approval.close();
@@ -177,12 +189,44 @@ approval.querySelector("#deny").addEventListener("click", async () => {
   await refresh();
 });
 
-document.querySelectorAll(".quick-actions button").forEach((button) => {
-  button.addEventListener("click", async () => sendCommand(button.dataset.command));
+document.addEventListener("click", async (event) => {
+  const quick = event.target.closest(".quick-actions button");
+  if (quick?.dataset.command) {
+    await sendCommand(quick.dataset.command);
+    return;
+  }
+
+  const action = event.target.closest("[data-action]");
+  if (!action) return;
+
+  if (action.dataset.action === "connect-blender") {
+    const result = await postJson("/api/blender/connect", {
+      executable: "C:/Program Files/Blender Foundation/Blender 4.2/blender.exe",
+      tutorialMode: true
+    });
+    setTranscript(`Blender bridge ${result.connected ? "connected" : "not connected"}.`, "FORGE // BLENDER");
+    await refresh();
+  }
+
+  if (action.dataset.action === "plan-chair") {
+    const design = await postJson("/api/blender/design", { prompt: "Design a modern wooden chair in Blender" });
+    renderDesignToTranscript(design);
+    await refresh();
+  }
+
+  if (action.dataset.action === "lesson-blender") {
+    const lesson = await postJson("/api/lesson", { topic: "Blender topology for beginners" });
+    renderLessonToTranscript(lesson);
+    await refresh();
+  }
+
+  if (action.dataset.action === "research-to-lesson") {
+    await sendCommand("Research the basics of hard-surface modeling and turn it into a mini tutorial.");
+  }
 });
 
 document.querySelectorAll(".nav").forEach((button) => {
-  button.addEventListener("click", () => {
+  button.addEventListener("click", async () => {
     document.querySelectorAll(".nav").forEach((node) => node.classList.remove("active"));
     button.classList.add("active");
     state.currentView = button.dataset.view;
@@ -204,6 +248,47 @@ document.querySelectorAll(".nav").forEach((button) => {
       diagnostics: 'SYSTEM HEALTH <span>runtime signals and module readiness</span>',
       permissions: 'PROTECTED ACTIONS <span>approval-gated capabilities</span>'
     })[state.currentView] || 'CAPABILITY CONSTELLATION <span>toggle local foundations</span>';
+
+    if (state.currentView === "blender") {
+      moduleGrid.innerHTML = `
+        <article class="module">
+          <span class="tag">BRIDGE</span>
+          <h3>Blender Bay</h3>
+          <p>Connect Forge to a local Blender workflow, generate design plans, and prepare script-ready scene setups.</p>
+          <div class="agent-list">
+            <button class="action-chip" data-action="connect-blender">Connect Blender</button>
+            <button class="action-chip" data-action="plan-chair">Plan chair design</button>
+          </div>
+        </article>
+        <article class="module">
+          <span class="tag">TUTOR</span>
+          <h3>Learn Blender</h3>
+          <p>Generate a mini tutorial, guided practice, and follow-up learning prompts.</p>
+          <div class="agent-list">
+            <button class="action-chip" data-action="lesson-blender">Mini tutorial</button>
+            <button class="action-chip" data-action="research-to-lesson">Research + teach</button>
+          </div>
+        </article>
+      `;
+    }
+
+    if (state.currentView === "tutor") {
+      moduleGrid.innerHTML = `
+        <article class="module">
+          <span class="tag">LESSONS</span>
+          <h3>Tutor Circle</h3>
+          <p>Build fast tutorials from any topic and store recent lessons locally.</p>
+          <div class="agent-list">
+            <button class="action-chip" data-action="lesson-blender">Blender mini tutorial</button>
+            <button class="action-chip" data-action="research-to-lesson">Research to lesson</button>
+          </div>
+        </article>
+      `;
+    }
+
+    if (state.currentView === "core") {
+      await refresh();
+    }
   });
 });
 

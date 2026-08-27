@@ -1,1 +1,134 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>FORGE</title><link rel="stylesheet" href="/styles.css"/></head><body><main class="shell"><aside class="rail"><div class="brand">ᚠ<span>FORGE</span></div><p class="eyebrow">PERSONAL INTELLIGENCE</p><nav><button class="nav active" data-view="core">◉ Core</button><button class="nav" data-view="memory">ᚱ Memory</button><button class="nav" data-view="diagnostics">⌁ Diagnostics</button><button class="nav" data-view="permissions">⚙ Permissions</button></nav><div class="rail-foot"><span class="signal"></span> CORE ONLINE<br/><small id="mode">Initializing...</small></div></aside><section class="stage"><header><div><p class="eyebrow">FORGE // COMMAND DECK</p><h1 id="viewTitle">What shall we forge?</h1></div><div class="head-actions"><button class="projector-toggle" id="projectorToggle">⌁ PROJECTOR</button><div class="status"><span></span> SECURE · LOCAL</div></div></header><section class="core-area"><div class="runes r1">ᚠ ᚢ ᚱ ᚷ ᛖ</div><div class="core"><div class="core-inner"><span>FORGE</span><small id="coreStatus">AWAKENING</small></div></div><div class="runes r2">ᛟ ᚾ ᛚ ᛁ ᚾ ᛖ</div><div class="readout"><div><small>COGNITION</small><b>ACTIVE</b></div><div><small>INTEGRITY</small><b>98.7%</b></div><div><small>CHANNELS</small><b id="channelCount">07</b></div></div></section><section class="command"><div id="transcript" aria-live="polite"><span class="label">FORGE</span><p>Core online. Voice, vision, creation, and diagnostics are standing by.</p></div><form id="commandForm"><button type="button" id="mic" title="Use local browser speech recognition">◉</button><input id="prompt" autocomplete="off" placeholder="Speak or type a command..."/><button class="send">FORGE ↗</button></form><div class="quick-actions"><button data-command="Remember my current project is Forge.">⌁ Remember</button><button data-command="Give me a focused plan for today's work.">ᚱ Focus plan</button><button data-command="Run safe system diagnostics.">⌁ Diagnose</button></div></section><section class="modules"><div class="section-title" id="sectionTitle">CAPABILITY CONSTELLATION <span>toggle local foundations</span></div><div id="moduleGrid" class="module-grid"></div></section></section><aside class="telemetry"><p class="eyebrow">LIVE TELEMETRY</p><div class="meter"><span>CORE LOAD</span><b>31%</b><i><em style="width:31%"></em></i></div><div class="meter"><span>MEMORY</span><b id="memoryCount">0 marks</b><i><em id="memoryMeter" style="width:8%"></em></i></div><div class="meter"><span>TOOL GATE</span><b id="gateStatus">LOCKED</b><i><em id="gateMeter" style="width:12%"></em></i></div><div class="log"><p class="eyebrow">EVENTS</p><div id="events">Awaiting first command.</div></div></aside></main><dialog id="approval"><div class="sigil">ᛉ</div><p class="eyebrow">PERMISSION REQUIRED</p><h2>Forge awaits your word.</h2><p id="approvalText"></p><div><button id="deny">Deny</button><button id="allow">Approve</button></div></dialog><script src="/app.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>FORGE // HIVEMIND</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <aside class="rail">
+        <div class="brand">ᚠ<span>FORGE</span></div>
+        <p class="eyebrow">PERSONAL INTELLIGENCE</p>
+        <nav>
+          <button class="nav active" data-view="core">◉ Core</button>
+          <button class="nav" data-view="hivemind">⌘ HiveMind</button>
+          <button class="nav" data-view="blender">△ Blender Bay</button>
+          <button class="nav" data-view="tutor">✦ Tutor</button>
+          <button class="nav" data-view="memory">ᚱ Memory</button>
+          <button class="nav" data-view="diagnostics">⌁ Diagnostics</button>
+          <button class="nav" data-view="permissions">⚙ Permissions</button>
+        </nav>
+        <div class="rail-foot">
+          <span class="signal"></span> CORE ONLINE<br />
+          <small id="mode">Initializing...</small>
+        </div>
+      </aside>
+
+      <section class="stage">
+        <header>
+          <div>
+            <p class="eyebrow">FORGE // COMMAND DECK</p>
+            <h1 id="viewTitle">What shall we forge?</h1>
+          </div>
+          <div class="head-actions">
+            <button class="projector-toggle" id="projectorToggle">⌁ PROJECTOR</button>
+            <div class="status"><span></span> SECURE · LOCAL · HIVEMIND</div>
+          </div>
+        </header>
+
+        <section class="hero-panels">
+          <div class="hero-card big">
+            <div class="core-area">
+              <div class="runes r1">ᚠ ᚢ ᚱ ᚷ ᛖ</div>
+              <div class="core">
+                <div class="core-inner"><span>FORGE</span><small id="coreStatus">AWAKENING</small></div>
+              </div>
+              <div class="runes r2">ᛟ ᚾ ᛚ ᛁ ᚾ ᛖ</div>
+              <div class="readout">
+                <div><small>COGNITION</small><b>ACTIVE</b></div>
+                <div><small>INTEGRITY</small><b>99.2%</b></div>
+                <div><small>CHANNELS</small><b id="channelCount">09</b></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hero-card side-stack">
+            <div class="micro-card">
+              <small>HIVEMIND</small>
+              <b id="agentTotal">1000 agents</b>
+              <span>Dynamic colonies for coding, research, teaching, automation, and 3D design.</span>
+            </div>
+            <div class="micro-card">
+              <small>BLENDER BRIDGE</small>
+              <b id="blenderStatus">Standby</b>
+              <span>Design workflows, modeling plans, local scripting bridge, and tutorial overlays.</span>
+            </div>
+            <div class="micro-card">
+              <small>AUTO START</small>
+              <b id="autoStartStatus">Enabled</b>
+              <span>Wake on launch, restore state, and prep daily workflows.</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="command">
+          <div id="transcript" aria-live="polite">
+            <span class="label">FORGE</span>
+            <p>HiveMind online. Research, tutoring, Blender planning, automations, and diagnostics are standing by.</p>
+          </div>
+          <form id="commandForm">
+            <button type="button" id="mic" title="Use local browser speech recognition">◉</button>
+            <input id="prompt" autocomplete="off" placeholder="Speak or type a command..." />
+            <button class="send">FORGE ↗</button>
+          </form>
+          <div class="quick-actions">
+            <button data-command="Teach me the basics of topology in Blender.">△ Blender lesson</button>
+            <button data-command="Research the best beginner workflow for hard-surface modeling.">⌁ Research</button>
+            <button data-command="Give me a focused plan for today's work.">ᚱ Focus plan</button>
+            <button data-command="Open HiveMind and show specialist groups.">⌘ HiveMind</button>
+          </div>
+        </section>
+
+        <section class="dash-grid">
+          <section class="modules panel">
+            <div class="section-title" id="sectionTitle">CAPABILITY CONSTELLATION <span>toggle local foundations</span></div>
+            <div id="moduleGrid" class="module-grid"></div>
+          </section>
+
+          <section class="panel">
+            <div class="section-title">HIVEMIND GROUPS <span>featured specialists</span></div>
+            <div id="hiveGroups" class="hive-groups"></div>
+          </section>
+        </section>
+      </section>
+
+      <aside class="telemetry">
+        <p class="eyebrow">LIVE TELEMETRY</p>
+        <div class="meter"><span>CORE LOAD</span><b>31%</b><i><em style="width:31%"></em></i></div>
+        <div class="meter"><span>MEMORY</span><b id="memoryCount">0 marks</b><i><em id="memoryMeter" style="width:8%"></em></i></div>
+        <div class="meter"><span>TOOL GATE</span><b id="gateStatus">LOCKED</b><i><em id="gateMeter" style="width:12%"></em></i></div>
+        <div class="meter"><span>CLAP WAKE</span><b id="clapStatus">ARMED</b><i><em id="clapMeter" style="width:72%"></em></i></div>
+        <div class="meter"><span>LESSONS</span><b id="lessonCount">0 queued</b><i><em id="lessonMeter" style="width:4%"></em></i></div>
+        <div class="log">
+          <p class="eyebrow">EVENTS</p>
+          <div id="events">Awaiting first command.</div>
+        </div>
+      </aside>
+    </main>
+
+    <dialog id="approval">
+      <div class="sigil">ᛉ</div>
+      <p class="eyebrow">PERMISSION REQUIRED</p>
+      <h2>Forge awaits your word.</h2>
+      <p id="approvalText"></p>
+      <div>
+        <button id="deny">Deny</button>
+        <button id="allow">Approve</button>
+      </div>
+    </dialog>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

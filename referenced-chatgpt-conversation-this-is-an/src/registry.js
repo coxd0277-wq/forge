@@ -1,14 +1,37 @@
-const modules = [
-  ["voice", "Voice conduit", "Listening and speaking interface", "ready"],
-  ["memory", "Runic memory", "Local memory store", "ready"],
-  ["computer", "Computer tools", "Desktop control; approval required", "simulated"],
-  ["blender", "Blender forge", "Scene/design handoff", "simulated"],
-  ["projector", "Projector mode", "Ceiling-friendly presentation scene", "simulated"],
-  ["vision", "Vision & gestures", "Camera and gesture pipeline", "simulated"],
-  ["code", "Code & repair", "Safe diagnostics and repair proposals", "simulated"]
-].map(([id, name, description, status]) => ({ id, name, description, status, enabled: true, updatedAt: new Date().toISOString() }));
-export const createRegistry = () => ({
-  list: () => modules,
-  setEnabled: (id, enabled) => { const module = modules.find((item) => item.id === id); if (!module) return { error: "Module not found" }; module.enabled = enabled; module.updatedAt = new Date().toISOString(); return module; },
-  get: (id) => modules.find((item) => item.id === id)
-});
+import { createAgentGroups } from "./agent-groups.js";
+
+const defaults = [
+  { id: "voice", name: "Voice Channel", status: "ready", enabled: true, summary: "Browser speech recognition and spoken command intake." },
+  { id: "memory", name: "Runic Memory", status: "ready", enabled: true, summary: "Local memory marks and quick semantic recall." },
+  { id: "diagnostics", name: "Diagnostics", status: "ready", enabled: true, summary: "Local runtime health, event tracing, and subsystem checks." },
+  { id: "projector", name: "Projector", status: "standby", enabled: true, summary: "Presentation mode, fullscreen focus scenes, and visual overlays." },
+  { id: "research", name: "Research Swarm", status: "planned", enabled: true, summary: "Topic investigation, evidence gathering, and synthesis." },
+  { id: "tutor", name: "Tutor Circle", status: "planned", enabled: true, summary: "Mini-lessons, learning plans, quizzes, and adaptive teaching." },
+  { id: "blender", name: "Blender Forge", status: "planned", enabled: false, summary: "Blender bridge, script generation, design guidance, and modeling support." },
+  { id: "automation", name: "AutoPilot", status: "planned", enabled: true, summary: "Startup workflows, recurring tasks, schedules, and safe automations." },
+  { id: "hivemind", name: "HiveMind", status: "planned", enabled: true, summary: "Dynamic multi-agent routing and specialist group orchestration." }
+];
+
+export const createRegistry = () => {
+  const modules = structuredClone(defaults);
+  const hive = createAgentGroups();
+
+  return {
+    list() {
+      return modules.map((module) => ({ ...module }));
+    },
+    get(id) {
+      return modules.find((module) => module.id === id) || null;
+    },
+    setEnabled(id, enabled) {
+      const module = modules.find((item) => item.id === id);
+      if (!module) return { error: "Module not found" };
+      module.enabled = enabled;
+      module.status = enabled ? module.status === "standby" ? "ready" : module.status : "offline";
+      return { ...module };
+    },
+    hive() {
+      return hive;
+    }
+  };
+};
